@@ -29,11 +29,11 @@ M-x: quake-mode
   (quake/define-frag kill-sexp) 
      #+END_SRC
 *** Behavior changes
-    - =quake/killing-spree-interval=
+    - quake/killing-spree-interval
       "The number of seconds that may pass between kills part of the same spree."
-    - =quake/holy-shit-interval=
+    - quake/holy-shit-interval
       "The number of seconds before another holy shit can occur."
-    - =quake/fullscreen-holy-shit=
+    - quake/fullscreen-holy-shit
       "If non-nil use the special fullscreen holy shit message."
 ** Sounds:
    COMING SOON
