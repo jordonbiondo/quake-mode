@@ -1,7 +1,8 @@
 * quake-mode
   Minor mode providing Quake/Unreal style killing spree counter for text killing in Emacs.
 
-  *Still very early in development, things will probably be breaking often*
+  *Still very early in development, lots of bugs*
+
 ** Usage:
    Use
     #+BEGIN_SRC 

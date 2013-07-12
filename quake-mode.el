@@ -158,7 +158,7 @@ since your last frag."
 	  (format "Error adding %s as a quake kill function: function not found" func-name))
   (let ((new-ad-name (concat "quake/kill-ad-for-" (symbol-name func-name))))
     `(progn (defadvice ,func-name (before ,(intern new-ad-name))
-	      (quake/kill-tic)))))
+	      (if (called-interactively-p 'interactive) (quake/kill-tic))))))
 
 (defun quake/disable-fragging()
   "Disables the tracking of your killing sprees.
