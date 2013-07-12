@@ -55,7 +55,7 @@
   "Minor mode for racking up massive killing sprees"
   :init-value nil
   :lighter " quake"
-  :global t
+  :global nil
   ;; body
   (quake/init-default-frags)
   (if quake-mode
@@ -92,8 +92,6 @@
   `(message "%s" (propertize ,msg 'face 
 			     '(:foreground
 			       "red"
-			       :weight
-			       'bold
 			       :height 
 			       ,(* 2 (face-attribute 'default :height))))))
 
