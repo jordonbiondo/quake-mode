@@ -1,5 +1,5 @@
 * quake-mode
-  Minor mode providing Quake/Unreal style killing spree counter for text killing in Emacs.
+  Minor mode providing Quake/Unreal-style killing sprees in Emacs.
 
   *Still very early in development, lots of bugs*
 
@@ -11,7 +11,7 @@ M-x: quake-mode
    to toggle the mode on and off
 
 ** Fragging
-   Currently the following functions count as frags:
+   Currently the following functions count as a frag:
        #+BEGIN_SRC 
   (kill-word)
   (kill-comment)
@@ -19,21 +19,24 @@ M-x: quake-mode
   (kill-whole-line)
   (kill-rectangle)
   (kill-region)
-  (kill-buffer))
+  (kill-buffer)
      #+END_SRC
 ** Customization
 *** Defining a frag
    You can enable other functions to count as frags like this:
-       #+BEGIN_SRC 
+       #+BEGIN_SRC lisp
 ;; kill-sexp will now count as a frag
   (quake/define-frag kill-sexp) 
      #+END_SRC
 *** Behavior changes
     - quake/killing-spree-interval
-      "The number of seconds that may pass between kills part of the same spree."
+
+      "The number of seconds that may pass between frags before your spree is reset.
     - quake/holy-shit-interval
+
       "The number of seconds before another holy shit can occur."
     - quake/fullscreen-holy-shit
+
       "If non-nil use the special fullscreen holy shit message."
 ** Sounds:
    COMING SOON
