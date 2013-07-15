@@ -64,6 +64,7 @@
 
 (defun quake/init-default-frags()
   (quake/define-frag kill-word)
+  (quake/define-frag backward-kill-word)
   (quake/define-frag kill-comment)
   (quake/define-frag kill-line)
   (quake/define-frag kill-whole-line)
@@ -123,7 +124,7 @@ ripped from yell/ fix me."
 	     (switch-to-buffer yell-buffer)
 	     (set-face-background 'default background)
 	     (insert (propertize 
-		      (concat "\nHOOOOOOLY\nSHIIIIT\n")
+		      (concat "\nHOLY\nSHIT\n")
 		      'face `(:foreground "red"
 					  :height ,(* 20 (face-attribute 'default :height)))))
 	     
