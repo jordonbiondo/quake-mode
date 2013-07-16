@@ -1,15 +1,15 @@
-;;; quake-mode.el --- 
+;;; quake-mode.el --- Quake/Unreal style (text) killings sprees
 ;; 
 ;; Filename: quake-mode.el
-;; Description: 
-;; Author: 
-;; Maintainer: 
+;; Description: Quake/Unreal style (text) killings sprees
+;; Author: Jordon Biondo
+;; Maintainer: Jordon Biondo <biondoj@mail.gvsu.edu>
 ;; Created: Fri Jul 12 13:01:38 2013 (-0400)
-;; Version: 
-;; Last-Updated: Fri Jul 12 13:01:47 2013 (-0400)
+;; Version: .1
+;; Last-Updated: Mon Jul 15 09:21:03 2013 (-0400)
 ;;           By: jorbi
-;;     Update #: 1
-;; URL: 
+;;     Update #: 2
+;; URL: github.com/jordonbiondo/quake-mode
 ;; Doc URL: 
 ;; Keywords: 
 ;; Compatibility: 
@@ -58,19 +58,58 @@
   :global nil
   ;; body
   (quake/init-default-frags)
+  (quake/choose-play-sound-async-function)
   (if quake-mode
-      (quake/enable-fragging)
-    (quake/disable-fragging)))
+      (progn (quake/enable-fragging)
+	     (quake/play-sound-async "prepare4.wav"))
+    (progn (quake/disable-fragging)
+	   (quake/play-sound-async "flawless.wav"))))
+
+;;---------------------------------------------------------------------------
+;; Define Frags
+;;---------------------------------------------------------------------------  
 
 (defun quake/init-default-frags()
-  (quake/define-frag kill-word)
-  (quake/define-frag backward-kill-word)
-  (quake/define-frag kill-comment)
-  (quake/define-frag kill-line)
-  (quake/define-frag kill-whole-line)
-  (quake/define-frag kill-rectangle)
-  (quake/define-frag kill-region)
-  (quake/define-frag kill-buffer))
+  (quake/deffrag kill-word)
+  (quake/deffrag backward-kill-word)
+  (quake/deffrag kill-comment)
+  (quake/deffrag kill-line)
+  (quake/deffrag kill-whole-line)
+  (quake/deffrag kill-rectangle)
+  (quake/deffrag kill-region)
+  (quake/deffrag kill-buffer))
+
+(defmacro quake/deffrag(func-name)
+  "Marks an unquoted function, FUNC-NAME, for counting as a frag (kill) towards your killing spree."
+  (assert (fboundp func-name) nil 
+	  (format "Error adding %s as a quake kill function: function not found" func-name))
+  (let ((new-ad-name (concat "quake/kill-ad-for-" (symbol-name func-name))))
+    `(progn (defadvice ,func-name (before ,(intern new-ad-name))
+	      (if (called-interactively-p 'interactive) (quake/kill-tic))))))
+
+(defmacro quake/undeffrag(func-name)
+  "The function, FUNC-NAME will no longer count as a frag."
+  (let ((curr-ad-name (concat "quake/kill-ad-for-" (symbol-name func-name))))
+    `(progn
+       (ad-remove-advice ,(quote func-name) (quote before) ,(quote (intern curr-ad-name)))
+       (ad-update ,(quote func-name)))))
+
+
+(defun quake/disable-fragging()
+  "Disables the tracking of your killing sprees.
+Fragging can be re-enabled using `quake/enable-fragging'."
+  (ad-disable-regexp "\\<quake/kill-ad-for-.*")
+  (ad-update-regexp "\\<quake/kill-ad-for-.*"))
+
+(defun quake/enable-fragging()
+  "Enables the tracking of your killing sprees if they have been disabled by `quake/disable-fragging'."
+  (ad-enable-regexp "\\<quake/kill-ad-for-.*")
+  (ad-activate-regexp "\\<quake/kill-ad-for-.*")
+  (ad-update-regexp "\\<quake/kill-ad-for-.*"))
+
+;;---------------------------------------------------------------------------
+;; Variabls
+;;---------------------------------------------------------------------------  
 
 (defvar quake/killing-spree 0
   "The current killing spree kill count.")
@@ -89,12 +128,14 @@
 
 (defcustom quake/fullscreen-holy-shit t
   "If non-nil, use the special fullscreen holy shit message.")
+
+(defvar quake/play-sound-async-function nil)
+
 (defmacro quake/announce(msg)
-  `(message "%s" (propertize ,msg 'face 
-			     '(:foreground
-			       "red"
-			       :height 
-			       ,(* 2 (face-attribute 'default :height))))))
+  `(message "%s" (propertize 
+		  ,msg 'face '(:foreground "red"
+					   :height ,(* 2 (face-attribute 'default :height))))))
+
 
 (defun quake/try-print-spree-message()
   (if (> quake/killing-spree 2)
@@ -124,12 +165,14 @@ ripped from yell/ fix me."
 	     (switch-to-buffer yell-buffer)
 	     (set-face-background 'default background)
 	     (insert (propertize 
-		      (concat "\nHOLY\nSHIT\n")
+		      (concat "\n HOLY\n SHIT\n")
 		      'face `(:foreground "red"
 					  :height ,(* 20 (face-attribute 'default :height)))))
-	     
+	     (quake/play-sound-async "holyshit.wav")
+	     (read-only-mode t)
 	     (run-with-timer 1 nil
 			     (lambda()
+			       (redisplay)
 			       (set-face-background 'default old-bg)
 			       (set-window-configuration old-config)
 			       (kill-buffer yell-buffer))))))
@@ -150,30 +193,64 @@ since your last frag."
 		       quake/killing-spree 0)))
 	     quake/killing-spree)))
 
+;;---------------------------------------------------------------------------
+;; Sounds support
+;;---------------------------------------------------------------------------  
+(defun quake/can-play-sound-async()
+  "Returns true if the system can play sound asynchronously."
+  (if (display-graphic-p) ;; must be a window system
+      (cond
+       ((equal system-type 'windows-nt) ;; windows
+	(with-temp-buffer
+	  (clog/todo "Let's just do this one time...")
+	  (shell-command "ver" (current-buffer))
+	  (princ "")
+	  (goto-char (point-min))
+	  (if (search-forward-regexp "Version 6\\.[0-9]\\.[0-9]+" nil t) t))) 
+       
+       ((equal system-type 'darwin) nil) ;; mac
+       
+       ((or (equal system-type 'gnu/linux)
+	    (equal system-type 'gnu)
+	    (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
+       
+       (t nil)) ;; other
+    ))
 
-(defmacro quake/define-frag(func-name)
-  "Marks an unquoted function, FUNC-NAME, for counting as a frag (kill) towards your killing spree."
-  (assert (fboundp func-name) nil 
-	  (format "Error adding %s as a quake kill function: function not found" func-name))
-  (let ((new-ad-name (concat "quake/kill-ad-for-" (symbol-name func-name))))
-    `(progn (defadvice ,func-name (before ,(intern new-ad-name))
-	      (if (called-interactively-p 'interactive) (quake/kill-tic))))))
-
-(defun quake/disable-fragging()
-  "Disables the tracking of your killing sprees.
-Fragging can be re-enabled using `quake/enable-fragging'."
-  (ad-disable-regexp "\\<quake/kill-ad-for-.*")
-  (ad-update-regexp "\\<quake/kill-ad-for-.*"))
-
-(defun quake/enable-fragging()
-  "Enables the tracking of your killing sprees if they have been disabled by `quake/disable-fragging'."
-  (ad-enable-regexp "\\<quake/kill-ad-for-.*")
-  (ad-activate-regexp "\\<quake/kill-ad-for-.*")
-  (ad-update-regexp "\\<quake/kill-ad-for-.*"))
+(defun quake/play-sound-async (sound-file)
+  (if (and (quake/can-play-sound-async)
+	   quake/play-sound-async-function)
+      (apply quake/play-sound-async-function (list sound-file))))
 
 
+
+(defun quake/choose-play-sound-async-function()
+  (setq quake/play-sound-async-function 
+	(cond
+	 ((not (quake/can-play-sound-async)) nil)
+	 ((equal system-type 'windows-nt) 
+	  (lambda(filename) 
+	    (start-process "quake/sound" nil "powershell" "-c"
+			   (format "%s%s%s"
+				   "(New-Object Media.SoundPlayer \"QuakeSounds/"
+				   filename
+				   "\").PlaySync()"))))
+	 ((equal system-type 'darwin) nil) ;; mac
+	 ((or (equal system-type 'gnu/linux)
+	      (equal system-type 'gnu)
+	      (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
+	 (t nil))))
+
+
+(quake/choose-play-sound-async-function)
+(quake/play-sound-async "holyshit.wav")
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
+
+(tl/define-recipe "qt" emacs-lisp-mode
+  (tl/kill-key)
+  (dotimes (n 50) (insert "f ")))
+    
 
 
