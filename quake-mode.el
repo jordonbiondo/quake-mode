@@ -242,15 +242,8 @@ since your last frag."
 	 (t nil))))
 
 
-(quake/choose-play-sound-async-function)
-(quake/play-sound-async "holyshit.wav")
+;;(quake/choose-play-sound-async-function)
+;;(quake/play-sound-async "holyshit.wav")
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
-
-(tl/define-recipe "qt" emacs-lisp-mode
-  (tl/kill-key)
-  (dotimes (n 50) (insert "f ")))
-    
-
-
