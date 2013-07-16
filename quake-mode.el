@@ -6,9 +6,9 @@
 ;; Maintainer: Jordon Biondo <biondoj@mail.gvsu.edu>
 ;; Created: Fri Jul 12 13:01:38 2013 (-0400)
 ;; Version: .1
-;; Last-Updated: Mon Jul 15 09:21:03 2013 (-0400)
+;; Last-Updated: Tue Jul 16 15:47:16 2013 (-0400)
 ;;           By: jorbi
-;;     Update #: 2
+;;     Update #: 5
 ;; URL: github.com/jordonbiondo/quake-mode
 ;; Doc URL: 
 ;; Keywords: 
@@ -58,6 +58,7 @@
   :global nil
   ;; body
   (quake/init-default-frags)
+  (quake/init-default-events)
   (quake/choose-play-sound-async-function)
   (if quake-mode
       (progn (quake/enable-fragging)
@@ -74,6 +75,7 @@
   (quake/deffrag backward-kill-word)
   (quake/deffrag kill-comment)
   (quake/deffrag kill-line)
+  (quake/deffrag kill-visual-line)
   (quake/deffrag kill-whole-line)
   (quake/deffrag kill-rectangle)
   (quake/deffrag kill-region)
@@ -94,7 +96,6 @@
        (ad-remove-advice ,(quote func-name) (quote before) ,(quote (intern curr-ad-name)))
        (ad-update ,(quote func-name)))))
 
-
 (defun quake/disable-fragging()
   "Disables the tracking of your killing sprees.
 Fragging can be re-enabled using `quake/enable-fragging'."
@@ -108,7 +109,7 @@ Fragging can be re-enabled using `quake/enable-fragging'."
   (ad-update-regexp "\\<quake/kill-ad-for-.*"))
 
 ;;---------------------------------------------------------------------------
-;; Variabls
+;; Variables
 ;;---------------------------------------------------------------------------  
 
 (defvar quake/killing-spree 0
@@ -131,23 +132,81 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 (defvar quake/play-sound-async-function nil)
 
+(defvar quake/spree-event-map (make-hash-table :test 'equal)
+  "Map holding event information, keys are ints.")
+
+;;---------------------------------------------------------------------------
+;; Functions
+;;---------------------------------------------------------------------------  
+
+;;---------------------------------------------------------------------------
+;; Killing Spree events
+;;---------------------------------------------------------------------------  
+
+(defun quake/init-default-events()
+  (clrhash quake/spree-event-map)
+  (quake/define-spree-event 3  "TRIPLE KILL" "triplekill.wav")
+  (quake/define-spree-event 5 "MULTI KILL" "multikill.wav")
+  (quake/define-spree-event 8  "MEGA KILL" "megakill.wav")
+  (quake/define-spree-event 11 "ULTRA KILL" "ultrakill.wav")
+  (quake/define-spree-event 15 "MONSTER KILL" "monsterkill.wav")
+  (quake/define-spree-event 20 "LUDICROUS KILL" "ludicrouskill.wav")
+  (quake/define-spree-event 25 "GODLIKE" "godlike.wav")
+  (quake/define-spree-event 35 "HOLY SHIT" "holyshit.wav"))
+
+(defmacro quake/define-spree-event(kill-count text sound)
+  "Define a new killing spree event.
+
+When `quake/killing-spree' reaches the integer KILL-COUNT, the string TEXT  will be
+displayed and the sound file SOUND will by played.
+
+If there is already an event bound to this KILL-COUNT, it will be overwritten."
+  (assert (and (integerp kill-count) (stringp text) (stringp sound)))
+  `(progn (puthash ,kill-count (list ,text ,sound) ,(quote quake/spree-event-map))))
+
+(defun quake/eventp(event)
+  "Returns true if EVENT is a quake/event.
+an event: '(text filename)"
+  (and event (listp event) (= (length event) 2)))
+
+(defun quake/assert-eventp(event)
+  "Signal an error if EVENT does not pass `quake/eventp'."
+  (if (not (quake/eventp event)) 
+      (signal 'wrong-type-argument (format "%s %s" 'quake/eventp event))))
+								      
+(defun quake/event-text(event)
+  "Returns the announcement text from an event object."
+  (quake/assert-eventp event)
+  (first event))
+
+(defun quake/event-sound-file(event)
+  "Returns the sound file from an event object."
+  (quake/assert-eventp event)
+  (second event))
+		 
+(defun quake/try-execute-event()
+  (let ((event (gethash quake/killing-spree quake/spree-event-map)))
+    (when (quake/eventp event)
+      (quake/play-sound-async (quake/event-sound-file event))
+      (quake/announce (quake/event-text event)))))
+ 	       
 (defmacro quake/announce(msg)
   `(message "%s" (propertize 
 		  ,msg 'face '(:foreground "red"
 					   :height ,(* 2 (face-attribute 'default :height))))))
 
+;; (defun quake/try-print-spree-message()
+;;   (if (> quake/killing-spree 2)
+;;       (cond
+;;        ((= quake/killing-spree 3) (quake/announce "TRIPLE KILL!"))
+;;        ((= quake/killing-spree 5) (quake/announce "MULTI KILL!"))
+;;        ((= quake/killing-spree 8) (quake/announce "MEGA KILL!"))
+;;        ((= quake/killing-spree 11) (quake/announce "ULTRA KILL!"))
+;;        ((= quake/killing-spree 15) (quake/announce "MONSTER KILL!"))
+;;        ((= quake/killing-spree 20) (quake/announce "LUDACRIS KILL!"))
+;;        ((= quake/killing-spree 25) (quake/announce "GODLIKE!"))
+;;        ((= quake/killing-spree 35) (quake/HOLY-SHIT)))))
 
-(defun quake/try-print-spree-message()
-  (if (> quake/killing-spree 2)
-      (cond
-       ((= quake/killing-spree 3) (quake/announce "TRIPLE KILL!"))
-       ((= quake/killing-spree 5) (quake/announce "MULTI KILL!"))
-       ((= quake/killing-spree 8) (quake/announce "MEGA KILL!"))
-       ((= quake/killing-spree 11) (quake/announce "ULTRA KILL!"))
-       ((= quake/killing-spree 15) (quake/announce "MONSTER KILL!"))
-       ((= quake/killing-spree 20) (quake/announce "LUDACRIS KILL!"))
-       ((= quake/killing-spree 25) (quake/announce "GODLIKE!"))
-       ((= quake/killing-spree 35) (quake/HOLY-SHIT)))))
 
 (defun quake/HOLY-SHIT()
   "HOLY SHIT!
@@ -181,17 +240,14 @@ ripped from yell/ fix me."
 (defun quake/kill-tic()
   "Increments your killing spree count or resets it if it has been longer than `quake/killing-spree-interval' seconds 
 since your last frag."
-  (if quake-mode
-      (progn (if (zerop quake/killing-spree)
-		 (setq quake/last-kill-time (current-time)
-		       quake/killing-spree (1+ quake/killing-spree))
-	       (if (<= (time-to-seconds (time-since quake/last-kill-time)) quake/killing-spree-interval)
-		   (progn (quake/try-print-spree-message)
-			  (setq quake/last-kill-time (current-time)
-				quake/killing-spree (1+ quake/killing-spree)))
-		 (setq quake/last-kill-time (current-time)
-		       quake/killing-spree 0)))
-	     quake/killing-spree)))
+  (if quake-mode 
+      (progn (if (<= (time-to-seconds (time-since quake/last-kill-time)) quake/killing-spree-interval)
+		 (progn (setq quake/last-kill-time (current-time)
+			      quake/killing-spree (1+ quake/killing-spree))
+			(quake/try-execute-event))
+	       (setq quake/last-kill-time (current-time)
+		     quake/killing-spree 1)))
+    quake/killing-spree))
 
 ;;---------------------------------------------------------------------------
 ;; Sounds support
@@ -202,7 +258,7 @@ since your last frag."
       (cond
        ((equal system-type 'windows-nt) ;; windows
 	(with-temp-buffer
-	  (clog/todo "Let's just do this one time...")
+	  ;;(clog/todo "Let's just do this one time in the future")
 	  (shell-command "ver" (current-buffer))
 	  (princ "")
 	  (goto-char (point-min))
@@ -218,32 +274,48 @@ since your last frag."
     ))
 
 (defun quake/play-sound-async (sound-file)
+  "Attempts to play SOUND-FILE."
   (if (and (quake/can-play-sound-async)
 	   quake/play-sound-async-function)
       (apply quake/play-sound-async-function (list sound-file))))
 
 
-
 (defun quake/choose-play-sound-async-function()
+  "Sets the value of `quake/play-sound-async-function' to a value appropriate for the
+`system-type'."
   (setq quake/play-sound-async-function 
 	(cond
 	 ((not (quake/can-play-sound-async)) nil)
 	 ((equal system-type 'windows-nt) 
 	  (lambda(filename) 
-	    (start-process "quake/sound" nil "powershell" "-c"
-			   (format "%s%s%s"
-				   "(New-Object Media.SoundPlayer \"QuakeSounds/"
-				   filename
-				   "\").PlaySync()"))))
+	    (lexical-let ((proc 
+			   (start-process "quake/sound" nil "powershell" "-Command"
+					  (format "%s%s%s"
+						  "(New-Object Media.SoundPlayer \"QuakeSounds/"
+						  filename
+						  "\").PlaySync();exit"))))
+	      ;; powershell doesn't signal??????
+	      (run-with-timer 8 nil (lambda()
+				      (process-send-eof proc))))))
 	 ((equal system-type 'darwin) nil) ;; mac
 	 ((or (equal system-type 'gnu/linux)
 	      (equal system-type 'gnu)
 	      (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
 	 (t nil))))
 
-
-;;(quake/choose-play-sound-async-function)
-;;(quake/play-sound-async "holyshit.wav")
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
+
+
+
+
+
+
+
+
+
+
+
+
+
