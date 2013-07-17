@@ -55,7 +55,7 @@
   "Minor mode for racking up massive killing sprees"
   :init-value nil
   :lighter " quake"
-  :global nil
+  :global t
   ;; body
   (quake/init-default-frags)
   (quake/init-default-events)
@@ -111,7 +111,6 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 ;;---------------------------------------------------------------------------
 ;; Variables
 ;;---------------------------------------------------------------------------  
-
 (defvar quake/killing-spree 0
   "The current killing spree kill count.")
 
@@ -120,6 +119,10 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 (defvar quake/killing-spree-interval 1 
   "The number of seconds that may pass between kills part of the same spree.")
+
+(defvar quake/display-announcer-text nil)
+
+(defvar quake/play-announcer-sounds t)
 
 (defvar quake/last-holy-shit-time (current-time)
   "The time `quake/HOLY-SHIT' was last used.")
@@ -187,9 +190,11 @@ an event: '(text filename)"
 (defun quake/try-execute-event()
   (let ((event (gethash quake/killing-spree quake/spree-event-map)))
     (when (quake/eventp event)
-      (quake/play-sound-async (quake/event-sound-file event))
-      (quake/announce (quake/event-text event)))))
- 	       
+      (if quake/play-announcer-sounds
+	  (quake/play-sound-async (quake/event-sound-file event)))
+      (if quake/display-announcer-text
+	  (quake/announce (quake/event-text event))))))
+
 (defmacro quake/announce(msg)
   `(message "%s" (propertize 
 		  ,msg 'face '(:foreground "red"
@@ -275,7 +280,7 @@ since your last frag."
 
 (defun quake/play-sound-async (sound-file)
   "Attempts to play SOUND-FILE."
-  (if (and (quake/can-play-sound-async)
+  (if (and t ;;(quake/can-play-sound-async) Puts a message in the minibuf, annoying
 	   quake/play-sound-async-function)
       (apply quake/play-sound-async-function (list sound-file))))
 
@@ -311,10 +316,7 @@ since your last frag."
 
 
 
-
-
-
-
+  
 
 
 

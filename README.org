@@ -9,18 +9,20 @@
 M-x: quake-mode
      #+END_SRC
    to toggle the mode on and off
-
 ** Fragging
    Currently the following functions count as a frag:
        #+BEGIN_SRC 
   (kill-word)
+  (backward-kill-word)
   (kill-comment)
   (kill-line)
+  (kill-visual-line)
   (kill-whole-line)
   (kill-rectangle)
   (kill-region)
   (kill-buffer)
      #+END_SRC
+   ... and more probably
 ** Customization
 *** Defining a frag
    You can enable other functions to count as frags like this:
@@ -28,20 +30,14 @@ M-x: quake-mode
 ;; kill-sexp will now count as a frag
   (quake/define-frag kill-sexp) 
      #+END_SRC
-*** Behavior changes
-    - quake/killing-spree-interval
-
-      "The number of seconds that may pass between frags before your spree is reset.
-    - quake/holy-shit-interval
-
-      "The number of seconds before another holy shit can occur."
-    - quake/fullscreen-holy-shit
-
-      "If non-nil use the special fullscreen holy shit message."
+*** Defining an event
+    You can choose how many kills certain events require like this:
+   #+BEGIN_SRC 
+;; at 8 kills, announce MEGE KILL and play the megakill.wav sound
+(quake/define-spree-event 8  "MEGA KILL" "megakill.wav")
+   #+END_SRC
 ** Sounds:
-   COMING SOON
-
-
-
-   
-   
+   The standard announcer sounds are all available.
+   Currently only Windows Systems with vista or newer are supported, all OS's will be
+   supported in time.
+    
