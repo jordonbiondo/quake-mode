@@ -55,7 +55,8 @@
   "Minor mode for racking up massive killing sprees"
   :init-value nil
   :lighter " quake"
-  :global t
+  :global nil
+  
   ;; body
   (quake/init-default-frags)
   (quake/init-default-events)
@@ -108,6 +109,18 @@ Fragging can be re-enabled using `quake/enable-fragging'."
   (ad-activate-regexp "\\<quake/kill-ad-for-.*")
   (ad-update-regexp "\\<quake/kill-ad-for-.*"))
 
+
+;;---------------------------------------------------------------------------
+;; Humiliating compilaiton failure
+;;---------------------------------------------------------------------------  
+(defun quake/compilation-result(buf msg)
+  (if (string-match "^finished" msg)
+      (quake/play-sound-async "flawless.wav")
+    (let ((humiliation-sounds (list "knife.wave" "knife2.wav" "knife3.wav" "suicide2.wav")))
+      (quake/play-sound-async (nth (random (length humiliation-sounds)) humiliation-sounds))))
+  nil)
+
+(add-hook 'compilation-finish-functions 'quake/compilation-result)
 ;;---------------------------------------------------------------------------
 ;; Variables
 ;;---------------------------------------------------------------------------  
@@ -311,13 +324,4 @@ since your last frag."
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
-
-
-
-
-
-  
-
-
-
 
