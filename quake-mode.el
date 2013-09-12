@@ -6,9 +6,9 @@
 ;; Maintainer: Jordon Biondo <biondoj@mail.gvsu.edu>
 ;; Created: Fri Jul 12 13:01:38 2013 (-0400)
 ;; Version: .1
-;; Last-Updated: Tue Jul 16 15:47:16 2013 (-0400)
-;;           By: jorbi
-;;     Update #: 5
+;; Last-Updated: Wed Sep 11 22:03:12 2013 (-0400)
+;;           By: Jordon Biondo
+;;     Update #: 6
 ;; URL: github.com/jordonbiondo/quake-mode
 ;; Doc URL: 
 ;; Keywords: 
@@ -151,6 +151,10 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 (defvar quake/spree-event-map (make-hash-table :test 'equal)
   "Map holding event information, keys are ints.")
 
+(defvar quake/sound-directory nil)
+(when load-file-name
+  (setq quake/sound-directory (format "%sQuakeSounds/" (file-name-directory load-file-name))))
+
 ;;---------------------------------------------------------------------------
 ;; Functions
 ;;---------------------------------------------------------------------------  
@@ -203,8 +207,9 @@ an event: '(text filename)"
 (defun quake/try-execute-event()
   (let ((event (gethash quake/killing-spree quake/spree-event-map)))
     (when (quake/eventp event)
-      (if quake/play-announcer-sounds
-	  (quake/play-sound-async (quake/event-sound-file event)))
+      (when quake/play-announcer-sounds
+	(message "here")
+	(quake/play-sound-async (quake/event-sound-file event)))
       (if quake/display-announcer-text
 	  (quake/announce (quake/event-text event))))))
 
@@ -282,7 +287,7 @@ since your last frag."
 	  (goto-char (point-min))
 	  (if (search-forward-regexp "Version 6\\.[0-9]\\.[0-9]+" nil t) t))) 
        
-       ((equal system-type 'darwin) nil) ;; mac
+       ((equal system-type 'darwin) t) ;; mac
        
        ((or (equal system-type 'gnu/linux)
 	    (equal system-type 'gnu)
@@ -297,6 +302,21 @@ since your last frag."
 	   quake/play-sound-async-function)
       (apply quake/play-sound-async-function (list sound-file))))
 
+(defun quake/windows-play-sound-async(sound-file)
+  (lexical-let ((proc 
+		 (start-process "quake/sound" nil "powershell" "-Command"
+				(format "%s%s%s"
+					(format "(New-Object Media.SoundPlayer \"%s"
+						quake/sound-directory)
+					filename
+					"\").PlaySync();exit"))))
+    ;; powershell doesn't signal??????
+    (run-with-timer 8 nil (lambda()
+			    (process-send-eof proc)))))
+
+(defun quake/osx-play-sound-async(sound-file) 
+  (message "%s" sound-file)
+  (start-process "quake/sound" nil "afplay" (format "%s%s" quake/sound-directory sound-file)))
 
 (defun quake/choose-play-sound-async-function()
   "Sets the value of `quake/play-sound-async-function' to a value appropriate for the
@@ -304,24 +324,16 @@ since your last frag."
   (setq quake/play-sound-async-function 
 	(cond
 	 ((not (quake/can-play-sound-async)) nil)
-	 ((equal system-type 'windows-nt) 
-	  (lambda(filename) 
-	    (lexical-let ((proc 
-			   (start-process "quake/sound" nil "powershell" "-Command"
-					  (format "%s%s%s"
-						  "(New-Object Media.SoundPlayer \"QuakeSounds/"
-						  filename
-						  "\").PlaySync();exit"))))
-	      ;; powershell doesn't signal??????
-	      (run-with-timer 8 nil (lambda()
-				      (process-send-eof proc))))))
-	 ((equal system-type 'darwin) nil) ;; mac
+	 ((equal system-type 'windows-nt) 'quake/windows-play-sound-async)
+	 ((equal system-type 'darwin) 'quake/osx-play-sound-async) ;; mac
 	 ((or (equal system-type 'gnu/linux)
 	      (equal system-type 'gnu)
 	      (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
 	 (t nil))))
 
+
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
+
 
