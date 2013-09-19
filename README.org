@@ -1,5 +1,8 @@
 * quake-mode
+  Demo:
+
   [[http://www.youtube.com/watch?v=ZithVlRsjKo]]
+
   Minor mode providing Quake/Unreal-style killing sprees in Emacs.
 
   *Still very early in development, lots of bugs*
