@@ -55,7 +55,7 @@
   "Minor mode for racking up massive killing sprees"
   :init-value nil
   :lighter " quake"
-  :global nil
+  :global t
   
   ;; body
   (quake/init-default-frags)
@@ -63,7 +63,7 @@
   (quake/choose-play-sound-async-function)
   (if quake-mode
       (progn (quake/enable-fragging)
-	     (quake/play-sound-async "prepare4.wav"))
+	     (quake/play-sound-async "prepare3.wav"))
     (progn (quake/disable-fragging)
 	   (quake/play-sound-async "flawless.wav"))))
 
@@ -116,7 +116,7 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 (defun quake/compilation-result(buf msg)
   (if (string-match "^finished" msg)
       (quake/play-sound-async "flawless.wav")
-    (let ((humiliation-sounds (list "knife.wave" "knife2.wav" "knife3.wav" "suicide2.wav")))
+    (let ((humiliation-sounds (list "knife.wav" "knife2.wav" "knife3.wav" "suicide2.wav")))
       (quake/play-sound-async (nth (random (length humiliation-sounds)) humiliation-sounds))))
   nil)
 
@@ -208,7 +208,6 @@ an event: '(text filename)"
   (let ((event (gethash quake/killing-spree quake/spree-event-map)))
     (when (quake/eventp event)
       (when quake/play-announcer-sounds
-	(message "here")
 	(quake/play-sound-async (quake/event-sound-file event)))
       (if quake/display-announcer-text
 	  (quake/announce (quake/event-text event))))))
@@ -315,7 +314,6 @@ since your last frag."
 			    (process-send-eof proc)))))
 
 (defun quake/osx-play-sound-async(sound-file) 
-  (message "%s" sound-file)
   (start-process "quake/sound" nil "afplay" (format "%s%s" quake/sound-directory sound-file)))
 
 (defun quake/choose-play-sound-async-function()
