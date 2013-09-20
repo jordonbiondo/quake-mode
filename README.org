@@ -42,6 +42,5 @@ M-x: quake-mode
    #+END_SRC
 ** Sounds:
    The standard announcer sounds are all available.
-   Currently only Windows Systems with vista or newer are supported, all OS's will be
-   supported in time.
+   Currently on OSX and Windows (Vista and newer) are supported
     
