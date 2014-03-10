@@ -278,7 +278,7 @@ since your last frag."
 ;;---------------------------------------------------------------------------  
 (defun quake/play-sound-async (sound-file)
   "Attempts to play SOUND-FILE."
-  (quake/agnostic-play-sound-async (sound-file)))
+  (quake/agnostic-play-sound-async sound-file))
 
 
 (defun quake/agnostic-play-sound-async(sound-file)
