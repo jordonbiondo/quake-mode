@@ -276,64 +276,23 @@ since your last frag."
 ;;---------------------------------------------------------------------------
 ;; Sounds support
 ;;---------------------------------------------------------------------------  
-(defun quake/can-play-sound-async()
-  "Returns true if the system can play sound asynchronously."
-  (if (display-graphic-p) ;; must be a window system
-      (cond
-       ((equal system-type 'windows-nt) ;; windows
-	(with-temp-buffer
-	  ;;(clog/todo "Let's just do this one time in the future")
-	  (shell-command "ver" (current-buffer))
-	  (princ "")
-	  (goto-char (point-min))
-	  (if (search-forward-regexp "Version 6\\.[0-9]\\.[0-9]+" nil t) t))) 
-       
-       ((equal system-type 'darwin) t) ;; mac
-       
-       ((or (equal system-type 'gnu/linux)
-	    (equal system-type 'gnu)
-	    (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
-       
-       (t nil)) ;; other
-    ))
-
 (defun quake/play-sound-async (sound-file)
   "Attempts to play SOUND-FILE."
-  (if (and t ;;(quake/can-play-sound-async) Puts a message in the minibuf, annoying
-	   quake/play-sound-async-function)
-      (apply quake/play-sound-async-function (list sound-file))))
+  (quake/agnostic-play-sound-async (sound-file)))
 
-(defun quake/windows-play-sound-async(sound-file)
-  (lexical-let ((proc 
-		 (start-process "quake/sound" nil "powershell" "-Command"
-				(format "%s%s%s"
-					(format "(New-Object Media.SoundPlayer \"%s"
-						quake/sound-directory)
-					filename
-					"\").PlaySync();exit"))))
-    ;; powershell doesn't signal??????
-    (run-with-timer 8 nil (lambda()
-			    (process-send-eof proc)))))
 
-(defun quake/osx-play-sound-async(sound-file) 
-  (start-process "quake/sound" nil "afplay" (format "%s%s" quake/sound-directory sound-file)))
-
-(defun quake/choose-play-sound-async-function()
-  "Sets the value of `quake/play-sound-async-function' to a value appropriate for the
-`system-type'."
-  (setq quake/play-sound-async-function 
-	(cond
-	 ((not (quake/can-play-sound-async)) nil)
-	 ((equal system-type 'windows-nt) 'quake/windows-play-sound-async)
-	 ((equal system-type 'darwin) 'quake/osx-play-sound-async) ;; mac
-	 ((or (equal system-type 'gnu/linux)
-	      (equal system-type 'gnu)
-	      (equal system-type 'gnu/kfreebsd)) nil) ;; linx etc
-	 (t nil))))
+(defun quake/agnostic-play-sound-async(sound-file)
+  "Play a wav in another emacs process woooooooo."
+  (start-process "quake/sound" "testyoutput" (executable-find "emacs")
+		 "-nw" "-q" "-batch" "-eval"
+		 (format "(play-sound-file %s)"
+                         (concat "\"" quake/sound-directory sound-file "\""))))
 
 
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
+
+
 
 
