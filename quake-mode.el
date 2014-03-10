@@ -236,7 +236,7 @@ an event: '(text filename)"
   "HOLY SHIT!
 ripped from yell/ fix me."
   (if (or (not quake/fullscreen-holy-shit)
-	  (<= (time-to-seconds (time-since quake/last-holy-shit-time)) 
+	  (<= (float-time (time-since quake/last-holy-shit-time)) 
 	      quake/holy-shit-interval))
       (quake/announce "HOOOOOOOLY SHIIIT!")
     (progn (lexical-let
@@ -265,7 +265,7 @@ ripped from yell/ fix me."
   "Increments your killing spree count or resets it if it has been longer than `quake/killing-spree-interval' seconds 
 since your last frag."
   (if quake-mode 
-      (progn (if (<= (time-to-seconds (time-since quake/last-kill-time)) quake/killing-spree-interval)
+      (progn (if (<= (float-time (time-since quake/last-kill-time)) quake/killing-spree-interval)
 		 (progn (setq quake/last-kill-time (current-time)
 			      quake/killing-spree (1+ quake/killing-spree))
 			(quake/try-execute-event))
