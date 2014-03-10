@@ -145,7 +145,7 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 (defvar quake/holy-shit-interval 10
   "The number of seconds before another holy shit can occur")
 
-(defcustom quake/fullscreen-holy-shit t
+(defvar quake/fullscreen-holy-shit t
   "If non-nil, use the special fullscreen holy shit message.")
 
 (defvar quake/play-sound-async-function nil)
