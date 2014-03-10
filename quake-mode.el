@@ -150,7 +150,10 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 (defvar quake/spree-event-map (make-hash-table :test 'equal)
   "Map holding event information, keys are ints.")
 
+(defvar quake/current-sound-process nil)
+
 (defvar quake/sound-directory nil)
+
 (when load-file-name
   (setq quake/sound-directory (format "%sQuakeSounds/" (file-name-directory load-file-name))))
 
@@ -267,10 +270,14 @@ since your last frag."
 
 (defun quake/agnostic-play-sound-async(sound-file)
   "Play a wav in another emacs process woooooooo."
-  (start-process "quake/sound" "testyoutput" (executable-find "emacs")
-		 "-nw" "-q" "-batch" "-eval"
-		 (format "(play-sound-file %s)"
-                         (concat "\"" quake/sound-directory sound-file "\""))))
+  (when (processp quake/current-sound-process)
+    (ignore-errors (kill-process quake/current-sound-process)))
+  (setq quake/current-sound-process
+	(start-process "quake/sound" "testyoutput" (executable-find "emacs")
+		       "-nw" "-q" "-batch" "-eval"
+		       (format "(play-sound-file %s)"
+			       (concat "\"" quake/sound-directory sound-file "\"")))))
+
 
 
 (provide 'quake-mode)
