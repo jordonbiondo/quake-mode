@@ -63,9 +63,11 @@
   (quake/choose-play-sound-async-function)
   (if quake-mode
       (progn (quake/enable-fragging)
-	     (quake/play-sound-async "prepare3.wav"))
+	     (quake/play-sound-async "prepare3.wav")
+	     (add-hook 'compilation-finish-functions 'quake/compilation-result))
     (progn (quake/disable-fragging)
-	   (quake/play-sound-async "flawless.wav"))))
+	   (quake/play-sound-async "flawless.wav")
+	   (remove-hook 'compilation-finish-functions 'quake/compilation-result))))
 
 ;;---------------------------------------------------------------------------
 ;; Define Frags
@@ -120,7 +122,7 @@ Fragging can be re-enabled using `quake/enable-fragging'."
       (quake/play-sound-async (nth (random (length humiliation-sounds)) humiliation-sounds))))
   nil)
 
-(add-hook 'compilation-finish-functions 'quake/compilation-result)
+
 ;;---------------------------------------------------------------------------
 ;; Variables
 ;;---------------------------------------------------------------------------  
