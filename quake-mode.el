@@ -6,9 +6,9 @@
 ;; Maintainer: Jordon Biondo <biondoj@mail.gvsu.edu>
 ;; Created: Fri Jul 12 13:01:38 2013 (-0400)
 ;; Version: .1
-;; Last-Updated: Wed Sep 11 22:03:12 2013 (-0400)
-;;           By: Jordon Biondo
-;;     Update #: 6
+;; Last-Updated: Mon Mar 10 17:31:39 2014 (-0400)
+;;           By: jordon.biondo
+;;     Update #: 10
 ;; URL: github.com/jordonbiondo/quake-mode
 ;; Doc URL: 
 ;; Keywords: 
@@ -60,7 +60,6 @@
   ;; body
   (quake/init-default-frags)
   (quake/init-default-events)
-  (quake/choose-play-sound-async-function)
   (if quake-mode
       (progn (quake/enable-fragging)
 	     (quake/play-sound-async "prepare3.wav")
@@ -148,8 +147,6 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 (defvar quake/fullscreen-holy-shit t
   "If non-nil, use the special fullscreen holy shit message.")
 
-(defvar quake/play-sound-async-function nil)
-
 (defvar quake/spree-event-map (make-hash-table :test 'equal)
   "Map holding event information, keys are ints.")
 
@@ -219,19 +216,6 @@ an event: '(text filename)"
 		  ,msg 'face '(:foreground "red"
 					   :height ,(* 2 (face-attribute 'default :height))))))
 
-;; (defun quake/try-print-spree-message()
-;;   (if (> quake/killing-spree 2)
-;;       (cond
-;;        ((= quake/killing-spree 3) (quake/announce "TRIPLE KILL!"))
-;;        ((= quake/killing-spree 5) (quake/announce "MULTI KILL!"))
-;;        ((= quake/killing-spree 8) (quake/announce "MEGA KILL!"))
-;;        ((= quake/killing-spree 11) (quake/announce "ULTRA KILL!"))
-;;        ((= quake/killing-spree 15) (quake/announce "MONSTER KILL!"))
-;;        ((= quake/killing-spree 20) (quake/announce "LUDACRIS KILL!"))
-;;        ((= quake/killing-spree 25) (quake/announce "GODLIKE!"))
-;;        ((= quake/killing-spree 35) (quake/HOLY-SHIT)))))
-
-
 (defun quake/HOLY-SHIT()
   "HOLY SHIT!
 ripped from yell/ fix me."
@@ -292,7 +276,4 @@ since your last frag."
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
-
-
-
 
