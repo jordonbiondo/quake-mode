@@ -154,6 +154,9 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 (defvar quake/sound-directory nil)
 
+(defvar quake/volume .5
+  "A float between 0 and 1 to control the volume of quake sounds.")
+
 (when load-file-name
   (setq quake/sound-directory (format "%sQuakeSounds/" (file-name-directory load-file-name))))
 
@@ -273,10 +276,11 @@ since your last frag."
   (when (processp quake/current-sound-process)
     (ignore-errors (kill-process quake/current-sound-process)))
   (setq quake/current-sound-process
-	(start-process "quake/sound" "testyoutput" (executable-find "emacs")
-		       "-nw" "-q" "-batch" "-eval"
-		       (format "(play-sound-file %s)"
-			       (concat "\"" quake/sound-directory sound-file "\"")))))
+        (start-process "quake/sound" "testyoutput" (executable-find "emacs")
+                       "-nw" "-q" "-batch" "-eval"
+                       (format "(play-sound-file %s %f)"
+                               (concat "\"" quake/sound-directory sound-file "\"")
+                               quake/volume))))
 
 
 
