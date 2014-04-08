@@ -1,5 +1,5 @@
 ;;; quake-mode.el --- Quake/Unreal style (text) killings sprees
-;; 
+;;
 ;; Filename: quake-mode.el
 ;; Description: Quake/Unreal style (text) killings sprees
 ;; Author: Jordon Biondo
@@ -10,40 +10,40 @@
 ;;           By: jordon.biondo
 ;;     Update #: 10
 ;; URL: github.com/jordonbiondo/quake-mode
-;; Doc URL: 
-;; Keywords: 
-;; Compatibility: 
-;; 
+;; Doc URL:
+;; Keywords:
+;; Compatibility:
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;; Commentary: 
-;; 
-;; 
-;; 
+;;
+;;; Commentary:
+;;
+;;
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Change Log:
-;; 
-;; 
+;;
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation; either version 3, or
 ;; (at your option) any later version.
-;; 
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-;; 
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Code:
 
 ;;---------------------------------------------------------------------------
@@ -56,21 +56,21 @@
   :init-value nil
   :lighter " quake"
   :global t
-  
+
   ;; body
   (quake/init-default-frags)
   (quake/init-default-events)
   (if quake-mode
       (progn (quake/enable-fragging)
-	     (quake/play-sound-async "prepare3.wav")
-	     (add-hook 'compilation-finish-functions 'quake/compilation-result))
+             (quake/play-sound-async "prepare3.wav")
+             (add-hook 'compilation-finish-functions 'quake/compilation-result))
     (progn (quake/disable-fragging)
-	   (quake/play-sound-async "flawless.wav")
-	   (remove-hook 'compilation-finish-functions 'quake/compilation-result))))
+           (quake/play-sound-async "flawless.wav")
+           (remove-hook 'compilation-finish-functions 'quake/compilation-result))))
 
 ;;---------------------------------------------------------------------------
 ;; Define Frags
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 
 (defun quake/init-default-frags()
   (quake/deffrag kill-word)
@@ -85,11 +85,11 @@
 
 (defmacro quake/deffrag(func-name)
   "Marks an unquoted function, FUNC-NAME, for counting as a frag (kill) towards your killing spree."
-  (assert (fboundp func-name) nil 
-	  (format "Error adding %s as a quake kill function: function not found" func-name))
+  (assert (fboundp func-name) nil
+          (format "Error adding %s as a quake kill function: function not found" func-name))
   (let ((new-ad-name (concat "quake/kill-ad-for-" (symbol-name func-name))))
     `(progn (defadvice ,func-name (before ,(intern new-ad-name))
-	      (if (called-interactively-p 'interactive) (quake/kill-tic))))))
+              (if (called-interactively-p 'interactive) (quake/kill-tic))))))
 
 (defmacro quake/undeffrag(func-name)
   "The function, FUNC-NAME will no longer count as a frag."
@@ -113,7 +113,7 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 ;;---------------------------------------------------------------------------
 ;; Humiliating compilaiton failure
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 (defun quake/compilation-result(buf msg)
   (if (string-match "^finished" msg)
       (quake/play-sound-async "flawless.wav")
@@ -124,14 +124,14 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 ;;---------------------------------------------------------------------------
 ;; Variables
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 (defvar quake/killing-spree 0
   "The current killing spree kill count.")
 
 (defvar quake/last-kill-time (current-time)
   "The time `kill-line' was last used.")
 
-(defvar quake/killing-spree-interval 1 
+(defvar quake/killing-spree-interval 1
   "The number of seconds that may pass between kills part of the same spree.")
 
 (defvar quake/display-announcer-text nil)
@@ -159,11 +159,11 @@ Fragging can be re-enabled using `quake/enable-fragging'."
 
 ;;---------------------------------------------------------------------------
 ;; Functions
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 
 ;;---------------------------------------------------------------------------
 ;; Killing Spree events
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 
 (defun quake/init-default-events()
   (clrhash quake/spree-event-map)
@@ -193,9 +193,9 @@ an event: '(text filename)"
 
 (defun quake/assert-eventp(event)
   "Signal an error if EVENT does not pass `quake/eventp'."
-  (if (not (quake/eventp event)) 
+  (if (not (quake/eventp event))
       (signal 'wrong-type-argument (format "%s %s" 'quake/eventp event))))
-								      
+
 (defun quake/event-text(event)
   "Returns the announcement text from an event object."
   (quake/assert-eventp event)
@@ -205,64 +205,64 @@ an event: '(text filename)"
   "Returns the sound file from an event object."
   (quake/assert-eventp event)
   (second event))
-		 
+
 (defun quake/try-execute-event()
   (let ((event (gethash quake/killing-spree quake/spree-event-map)))
     (when (quake/eventp event)
       (when quake/play-announcer-sounds
-	(quake/play-sound-async (quake/event-sound-file event)))
+        (quake/play-sound-async (quake/event-sound-file event)))
       (if quake/display-announcer-text
-	  (quake/announce (quake/event-text event))))))
+          (quake/announce (quake/event-text event))))))
 
 (defmacro quake/announce(msg)
-  `(message "%s" (propertize 
-		  ,msg 'face '(:foreground "red"
-					   :height ,(* 2 (face-attribute 'default :height))))))
+  `(message "%s" (propertize
+                  ,msg 'face '(:foreground "red"
+                                           :height ,(* 2 (face-attribute 'default :height))))))
 
 (defun quake/HOLY-SHIT()
   "HOLY SHIT!
 ripped from yell/ fix me."
   (if (or (not quake/fullscreen-holy-shit)
-	  (<= (float-time (time-since quake/last-holy-shit-time)) 
-	      quake/holy-shit-interval))
+          (<= (float-time (time-since quake/last-holy-shit-time))
+              quake/holy-shit-interval))
       (quake/announce "HOOOOOOOLY SHIIIT!")
     (progn (lexical-let
-	       ((old-config (current-window-configuration))
-		(old-bg (face-background 'default))
-		(background (face-background 'default))
-		(yell-buffer (generate-new-buffer (generate-new-buffer-name ":yell"))))
-	     (delete-other-windows)
-	     (switch-to-buffer yell-buffer)
-	     (set-face-background 'default background)
-	     (insert (propertize 
-		      (concat "\n HOLY\n SHIT\n")
-		      'face `(:foreground "red"
-					  :height ,(* 20 (face-attribute 'default :height)))))
-	     (quake/play-sound-async "holyshit.wav")
-	     (read-only-mode t)
-	     (run-with-timer 1 nil
-			     (lambda()
-			       (redisplay)
-			       (set-face-background 'default old-bg)
-			       (set-window-configuration old-config)
-			       (kill-buffer yell-buffer))))))
+               ((old-config (current-window-configuration))
+                (old-bg (face-background 'default))
+                (background (face-background 'default))
+                (yell-buffer (generate-new-buffer (generate-new-buffer-name ":yell"))))
+             (delete-other-windows)
+             (switch-to-buffer yell-buffer)
+             (set-face-background 'default background)
+             (insert (propertize
+                      (concat "\n HOLY\n SHIT\n")
+                      'face `(:foreground "red"
+                                          :height ,(* 20 (face-attribute 'default :height)))))
+             (quake/play-sound-async "holyshit.wav")
+             (read-only-mode t)
+             (run-with-timer 1 nil
+                             (lambda()
+                               (redisplay)
+                               (set-face-background 'default old-bg)
+                               (set-window-configuration old-config)
+                               (kill-buffer yell-buffer))))))
   (setq quake/last-holy-shit-time (current-time)))
 
 (defun quake/kill-tic()
-  "Increments your killing spree count or resets it if it has been longer than `quake/killing-spree-interval' seconds 
+  "Increments your killing spree count or resets it if it has been longer than `quake/killing-spree-interval' seconds
 since your last frag."
-  (if quake-mode 
+  (if quake-mode
       (progn (if (<= (float-time (time-since quake/last-kill-time)) quake/killing-spree-interval)
-		 (progn (setq quake/last-kill-time (current-time)
-			      quake/killing-spree (1+ quake/killing-spree))
-			(quake/try-execute-event))
-	       (setq quake/last-kill-time (current-time)
-		     quake/killing-spree 1)))
+                 (progn (setq quake/last-kill-time (current-time)
+                              quake/killing-spree (1+ quake/killing-spree))
+                        (quake/try-execute-event))
+               (setq quake/last-kill-time (current-time)
+                     quake/killing-spree 1)))
     quake/killing-spree))
 
 ;;---------------------------------------------------------------------------
 ;; Sounds support
-;;---------------------------------------------------------------------------  
+;;---------------------------------------------------------------------------
 (defun quake/play-sound-async (sound-file)
   "Attempts to play SOUND-FILE."
   (quake/agnostic-play-sound-async sound-file))
@@ -283,4 +283,3 @@ since your last frag."
 (provide 'quake-mode)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; quake-mode.el ends here
-
